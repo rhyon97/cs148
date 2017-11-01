@@ -34,7 +34,7 @@ void Assignment5::SetupScene()
 
 void Assignment5::SetupCamera()
 {
-    camera->SetPosition(glm::vec3(0.f, 0.f, 2.f));
+    camera->SetPosition(glm::vec3(0.f, 0.f, 4.f));
 }
 
 void Assignment5::HandleInput(SDL_Keysym key, Uint32 state, Uint8 repeat, double timestamp, double deltaTime)
@@ -176,23 +176,66 @@ void Assignment5::SetupExample2()
     lightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
     lightProperties->specularColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
 
-    std::shared_ptr<Light> pointLight = std::make_shared<Light>(std::move(lightProperties));
-    pointLight->SetPosition(glm::vec3(10.f, 10.f, 10.f));
-    scene->AddLight(pointLight);
+    std::shared_ptr<BlinnPhongShader> legoshader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    legoshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    legoshader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);
+    legoshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    legoshader->SetTexture(BlinnPhongShader::TextureSlots::DIFFUSE, TextureLoader::LoadTexture("lego.jpg"));
+    legoshader->SetTexture(BlinnPhongShader::TextureSlots::SPECULAR, TextureLoader::LoadTexture("lego.jpg"));
+    legoshader->SetTexture(BlinnPhongShader::TextureSlots::NORMAL, TextureLoader::LoadTexture("lego.jpg"));
 
-    std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
-    std::vector<std::shared_ptr<RenderingObject>> sphereTemplate = MeshLoader::LoadMesh(nullptr, "sphere.obj", &loadedMaterials);
-    for (size_t i = 0; i < sphereTemplate.size(); ++i) {
-        std::shared_ptr<BlinnPhongShader> shader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
-        shader->LoadMaterialFromAssimp(loadedMaterials[i]);
-        sphereTemplate[i]->SetShader(std::move(shader));
-
-        sphereTemplate[i]->ComputeTangentSpace();
+    
+    std::vector<std::shared_ptr<RenderingObject>> legos = MeshLoader::LoadMesh(legoshader, "lego.obj");
+    if (legos.empty()) {
+        std::cerr << "ERROR: Failed to load the model. Check your paths." << std::endl;
+        return;
     }
 
-    std::shared_ptr<class SceneObject> sceneObject = std::make_shared<SceneObject>(sphereTemplate);
-    sceneObject->Rotate(glm::vec3(SceneObject::GetWorldRight()), PI / 4.f);
-    scene->AddSceneObject(sceneObject);
+    std::shared_ptr<class SceneObject> legoObject = std::make_shared<SceneObject>(legos);
+    //legoObject->SetPosition(glm::vec3(0.f, 4.f, 5.f));
+    scene->AddSceneObject(legoObject);
+    //std::shared_ptr<BlinnPhongShader> shader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
+
+    std::shared_ptr<BlinnPhongShader> backgroundshader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    backgroundshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    backgroundshader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);
+    backgroundshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    backgroundshader->SetTexture(BlinnPhongShader::TextureSlots::DIFFUSE, TextureLoader::LoadTexture("workshop.jpg"));
+    backgroundshader->SetTexture(BlinnPhongShader::TextureSlots::SPECULAR, TextureLoader::LoadTexture("workshop.jpg"));
+    backgroundshader->SetTexture(BlinnPhongShader::TextureSlots::NORMAL, TextureLoader::LoadTexture("workshop.jpg"));
+    
+    std::vector<std::shared_ptr<RenderingObject>> background = MeshLoader::LoadMesh(backgroundshader, "background.obj");
+    if (background.empty()) {
+        std::cerr << "ERROR: Failed to load the model. Check your paths." << std::endl;
+        return;
+    }
+    std::shared_ptr<class SceneObject> backgroundObject = std::make_shared<SceneObject>(background);
+    backgroundObject->SetPosition(glm::vec3(5.f, 10.f, 0.f));
+    scene->AddSceneObject(backgroundObject);
+    
+    std::shared_ptr<Light> pointLight = std::make_shared<Light>(std::move(lightProperties));
+    pointLight->SetPosition(glm::vec3(1.f, 1.f, 1.f));
+    scene->AddLight(pointLight);
+
+    std::shared_ptr<BlinnPhongShader> deskshader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    deskshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    deskshader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);
+    deskshader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    deskshader->SetTexture(BlinnPhongShader::TextureSlots::DIFFUSE, TextureLoader::LoadTexture("desk.jpg"));
+    deskshader->SetTexture(BlinnPhongShader::TextureSlots::SPECULAR, TextureLoader::LoadTexture("desk.jpg"));
+    deskshader->SetTexture(BlinnPhongShader::TextureSlots::NORMAL, TextureLoader::LoadTexture("desk.jpg"));
+    
+    std::vector<std::shared_ptr<RenderingObject>> desk = MeshLoader::LoadMesh(deskshader, "desk.obj");
+    if (desk.empty()) {
+        std::cerr << "ERROR: Failed to load the model. Check your paths." << std::endl;
+        return;
+    }
+
+
+    std::shared_ptr<class SceneObject> deskObject = std::make_shared<SceneObject>(desk);
+    //deskObject->SetPosition(glm::vec3(0.f, -1.f, 0.f));
+    scene->AddSceneObject(deskObject);
+   
 }
 
 

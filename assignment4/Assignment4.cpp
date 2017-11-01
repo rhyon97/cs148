@@ -3,6 +3,10 @@
 #include "common/Utility/Mesh/Simple/PrimitiveCreator.h"
 #include "common/Utility/Mesh/Loading/MeshLoader.h"
 #include "common/Utility/Texture/TextureLoader.h"
+#include "common/Scene/Light/EpicLightProperties.h"
+#include "common/Rendering/Shaders/EpicShader.h"
+#include "common/Scene/Light/DirectedLight.h"
+#include "common/Scene/Light/HemisphereLight.h"
 
 #include <cmath>
 
@@ -58,6 +62,11 @@ void Assignment4::HandleInput(SDL_Keysym key, Uint32 state, Uint8 repeat, double
             SetupExample1();
         }
         break;
+    case SDLK_2:
+        if (!repeat && state == SDL_KEYDOWN) {
+            SetupExample2();
+        }
+        break;
     case SDLK_UP:
         camera->Rotate(glm::vec3(camera->GetRightDirection()), 0.1f);
         break;
@@ -89,6 +98,12 @@ void Assignment4::HandleInput(SDL_Keysym key, Uint32 state, Uint8 repeat, double
     case SDLK_RCTRL:
         camera->Translate(glm::vec3(camera->GetUpDirection() * -0.3f));
         break;
+    case SDLK_EQUALS:
+        sceneObject->AddScale(0.1f);
+        break;
+    case SDLK_MINUS:
+        sceneObject->AddScale(-0.1f);
+        break;
     default:
         Application::HandleInput(key, state, repeat, timestamp, deltaTime);
         break;
@@ -104,7 +119,7 @@ void Assignment4::HandleWindowResize(float x, float y)
 void Assignment4::SetupExample1()
 {
     scene->ClearScene();
-#ifndef DISABLE_OPENGL_SUBROUTINES
+/*#ifndef DISABLE_OPENGL_SUBROUTINES
     std::unordered_map<GLenum, std::string> shaderSpec = {
         { GL_VERTEX_SHADER, "brdf/blinnphong/frag/blinnphong.vert" },
         { GL_FRAGMENT_SHADER, "brdf/blinnphong/frag/blinnphong.frag" }
@@ -113,25 +128,111 @@ void Assignment4::SetupExample1()
     std::unordered_map<GLenum, std::string> shaderSpec = {
         { GL_VERTEX_SHADER, "brdf/blinnphong/frag/noSubroutine/blinnphong.vert" },
         { GL_FRAGMENT_SHADER, "brdf/blinnphong/frag/noSubroutine/blinnphong.frag"}
+    };*/
+    std::unordered_map<GLenum, std::string> shaderSpec = {
+        { GL_VERTEX_SHADER, "brdf/blinnphong/frag/noSubroutine/epic.vert" },
+        { GL_FRAGMENT_SHADER, "brdf/blinnphong/frag/noSubroutine/epic.frag" }
     };
-#endif
-    std::shared_ptr<BlinnPhongShader> shader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
-    shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
-    shader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);
+//#endif
 
-    std::shared_ptr<BlinnPhongShader> groundShader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
-    shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    std::shared_ptr<EpicShader> shader = std::make_shared<EpicShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    /*shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    shader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);*/
 
-    std::unique_ptr<LightProperties> lightProperties = make_unique<LightProperties>();
+    std::shared_ptr<EpicShader> groundShader = std::make_shared<EpicShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    //shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+
+    /*std::unique_ptr<EpicLightProperties> lightProperties = make_unique<EpicLightProperties>();
     lightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
     lightProperties->specularColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    lightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
 
     pointLight = std::make_shared<Light>(std::move(lightProperties));
     pointLight->SetPosition(glm::vec3(10.f, 10.f, 10.f));
-    scene->AddLight(pointLight);
+    scene->AddLight(pointLight);*/
+
+    std::unique_ptr<EpicLightProperties> directedLightProperties = make_unique<EpicLightProperties>();
+    directedLightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    directedLightProperties->specularColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    directedLightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    
+    directedLight = std::make_shared<DirectedLight>(std::move(directedLightProperties));
+    directedLight->SetPosition(glm::vec3(10.f, 10.f, 10.f));
+    scene->AddLight(directedLight);
+
+    /*std::unique_ptr<EpicLightProperties> hemisphereLightProperties = make_unique<EpicLightProperties>();
+    hemisphereLightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    hemisphereLightProperties->specularColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    hemisphereLightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    
+    hemisphereLight = std::make_shared<HemisphereLight>(std::move(hemisphereLightProperties));
+    hemisphereLight->SetPosition(glm::vec3(10.f, 10.f, 10.f));
+    scene->AddLight(hemisphereLight);*/
 
     GenericSetupExample(shader, groundShader);
 
+}
+
+
+void Assignment4::SetupExample2()
+{
+    scene->ClearScene();
+
+    std::unordered_map<GLenum, std::string> shaderSpec = {
+        { GL_VERTEX_SHADER, "brdf/blinnphong/frag/noSubroutine/epic.vert" },
+        { GL_FRAGMENT_SHADER, "brdf/blinnphong/frag/noSubroutine/epic.frag" }
+    };
+
+    camera->SetPosition(glm::vec3(-0.07430f, 3.63031f, 3.20518f));
+    camera->Rotate(glm::vec3(SceneObject::GetWorldUp()), -3.3f * PI / 5.f);
+    camera->Rotate(glm::vec3(camera->GetRightDirection()), -PI / 8.f);
+    camera->Translate(glm::vec3(camera->GetRightDirection()) * 10.f);
+    camera->Translate(glm::vec3(camera->GetForwardDirection()) * -10.f);
+
+    PerspectiveCamera* pcamera = static_cast<PerspectiveCamera*>(camera.get());
+    pcamera->SetZFar(1000.f);
+
+    std::shared_ptr<EpicShader> shader = std::make_shared<EpicShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    /*shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+    shader->SetSpecular(glm::vec4(1.f, 1.f, 1.f, 1.f), 40.f);*/
+
+    std::vector<std::shared_ptr<RenderingObject>> meshTemplate = MeshLoader::LoadMesh(shader, "graphics_assgn3.obj");
+    if (meshTemplate.empty()) {
+        std::cerr << "ERROR: Failed to load the model. Check your paths." << std::endl;
+        return;
+    }
+
+    sceneObject = std::make_shared<SceneObject>(meshTemplate);
+    scene->AddSceneObject(sceneObject);
+    //std::shared_ptr<EpicShader> groundShader = std::make_shared<EpicShader>(shaderSpec, GL_FRAGMENT_SHADER);
+    //shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
+
+    std::unique_ptr<EpicLightProperties> lightProperties = make_unique<EpicLightProperties>();
+    lightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    lightProperties->specularColor = glm::vec4(2.f, 2.f, 2.f, 2.f);
+    lightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+
+    pointLight = std::make_shared<Light>(std::move(lightProperties));
+    pointLight->SetPosition(glm::vec3(17.f, 20.f, 1.f));
+    scene->AddLight(pointLight);
+
+    std::unique_ptr<EpicLightProperties> directedLightProperties = make_unique<EpicLightProperties>();
+    directedLightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    directedLightProperties->specularColor = glm::vec4(2.f, 2.f, 2.f, 2.f);
+    directedLightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    
+    directedLight = std::make_shared<DirectedLight>(std::move(directedLightProperties));
+    directedLight->SetPosition(glm::vec3(17.f, 20.f, 10.f));
+    scene->AddLight(directedLight);
+
+    std::unique_ptr<EpicLightProperties> hemisphereLightProperties = make_unique<EpicLightProperties>();
+    hemisphereLightProperties->diffuseColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    hemisphereLightProperties->specularColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    hemisphereLightProperties->lightColor = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    
+    hemisphereLight = std::make_shared<HemisphereLight>(std::move(hemisphereLightProperties));
+    hemisphereLight->SetPosition(glm::vec3(10.f, 10.f, 10.f));
+    scene->AddLight(hemisphereLight);
 }
 
 void Assignment4::GenericSetupExample(std::shared_ptr<ShaderProgram> shader, std::shared_ptr<ShaderProgram> groundShader)
@@ -153,10 +254,10 @@ void Assignment4::GenericSetupExample(std::shared_ptr<ShaderProgram> shader, std
     // 10x10 grid of spheres.
     for (int x = 0; x < 10; ++x)  {
         for (int y = 0; y < 10; ++y) {
-            std::shared_ptr<class SceneObject> sceneObject = std::make_shared<SceneObject>(sphereTemplate);
-            sceneObject->SetPosition(glm::vec3(x * 12.f, 0.f, y * 12.f));
-            scene->AddSceneObject(sceneObject);
-            sphereDance.push_back(sceneObject);
+            std::shared_ptr<class SceneObject> object = std::make_shared<SceneObject>(sphereTemplate);
+            object->SetPosition(glm::vec3(x * 12.f, 0.f, y * 12.f));
+            scene->AddSceneObject(object);
+            sphereDance.push_back(object);
         }
     }
 

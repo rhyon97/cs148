@@ -8,6 +8,7 @@
 struct LightProperties {
     glm::vec4 diffuseColor;
     glm::vec4 specularColor;
+    glm::vec4 lightColor;
 };
 
 #endif

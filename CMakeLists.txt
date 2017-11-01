@@ -106,7 +106,7 @@ elseif (APPLE)
 
     # Need to code sign for use with XCode!
     add_custom_command(TARGET cs148opengl4 POST_BUILD
-        COMMAND codesign -f -s - "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL2/osx/SDL2.framework")
+        COMMAND codesign -f -s - "${CMAKE_CURRENT_SOURCE_DIR}/external/SDL2/osx/SDL2.framework/Versions/Current")
 else()
     target_link_libraries(cs148opengl4 ${SDL2_LIBRARY})
 endif()
